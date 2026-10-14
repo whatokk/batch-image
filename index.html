@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>批量出图 · Batch Image</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">🎨</span>
+        <div>
+          <h1>批量出图</h1>
+          <p class="sub">OpenAI 兼容接口 · 文生图 / 图生图 · 纯前端零后端</p>
+        </div>
+      </div>
+      <div class="key-badge" id="keyBadge">🔒 密钥仅存本地</div>
+    </header>
+
+    <main class="layout">
+      <!-- 左侧：配置区 -->
+      <section class="panel config-panel">
+        <h2>① 接口配置</h2>
+
+        <label class="field">
+          <span>接口地址 baseUrl</span>
+          <input type="text" id="baseUrl" placeholder="https://api.example.com/v1" autocomplete="off" />
+          <small>任何 OpenAI 兼容接口，以 /v1 结尾</small>
+        </label>
+
+        <label class="field">
+          <span>API Key</span>
+          <input type="password" id="apiKey" placeholder="sk-xxxxx" autocomplete="off" />
+          <small>仅保存在你浏览器本地，不会上传到任何服务器</small>
+        </label>
+
+        <label class="field">
+          <span>模型</span>
+          <input type="text" id="model" value="gpt-image-1" autocomplete="off" />
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span>尺寸</span>
+            <input type="text" id="size" placeholder="1024x1024" autocomplete="off" />
+            <small>留空用接口默认</small>
+          </label>
+          <label class="field">
+            <span>质量</span>
+            <select id="quality">
+              <option value="">默认</option>
+              <option value="low">low</option>
+              <option value="medium">medium</option>
+              <option value="high">high</option>
+              <option value="auto">auto</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            <span>每条出图数</span>
+            <input type="number" id="imagesPerPrompt" value="1" min="1" max="4" />
+          </label>
+          <label class="field">
+            <span>并发数</span>
+            <input type="number" id="concurrency" value="2" min="1" max="6" />
+          </label>
+        </div>
+
+        <details class="adv">
+          <summary>高级设置</summary>
+          <label class="field">
+            <span>超时(秒)</span>
+            <input type="number" id="timeout" value="240" min="10" />
+          </label>
+          <label class="field">
+            <span>重试次数</span>
+            <input type="number" id="retries" value="2" min="0" max="5" />
+          </label>
+          <label class="field">
+            <span>参考图模式</span>
+            <select id="refMode">
+              <option value="none">不使用参考图（纯文生图）</option>
+              <option value="single">单张参考图（图生图）</option>
+              <option value="multi">多张参考图（图生图）</option>
+            </select>
+          </label>
+        </details>
+      </section>
+
+      <!-- 中间：提示词 + 参考图区 -->
+      <section class="panel main-panel">
+        <h2>② 提示词</h2>
+        <p class="hint">一行一条，<code>#</code> 开头为注释，空行跳过。图生图时把参考图拖到下方上传区。</p>
+        <textarea id="prompts" placeholder="一只戴墨镜的柴犬坐在冲浪板上，日落海面，胶片质感&#10;极简北欧风客厅，大面积留白，浅木色调，晨光&#10;赛博朋克风格的拉面摊，霓虹灯，雨夜街道"></textarea>
+
+        <div id="refZone" class="ref-zone hidden">
+          <h3>参考图（图生图）</h3>
+          <div class="ref-drop" id="refDrop">
+            <p>拖拽图片到这里，或点击选择</p>
+            <input type="file" id="refInput" accept="image/*" multiple hidden />
+          </div>
+          <div class="ref-list" id="refList"></div>
+          <small class="hint">多张参考图时，每张都会作为独立参考发给接口；请先压缩（长边 ≤1536、JPEG 85）避免请求过大。</small>
+        </div>
+
+        <div class="actions">
+          <button id="runBtn" class="btn primary">▶ 开始生成</button>
+          <button id="stopBtn" class="btn danger hidden">■ 停止</button>
+          <button id="clearBtn" class="btn ghost">清空结果</button>
+        </div>
+
+        <div class="progress hidden" id="progressWrap">
+          <div class="progress-bar"><div id="progressBar"></div></div>
+          <div class="progress-text" id="progressText">0 / 0</div>
+        </div>
+
+        <div class="log" id="log"></div>
+      </section>
+
+      <!-- 右侧：结果区 -->
+      <section class="panel result-panel">
+        <h2>③ 结果 <span id="resultCount" class="count"></span></h2>
+        <div class="result-grid" id="resultGrid"></div>
+        <div class="result-actions hidden" id="resultActions">
+          <button id="downloadAllBtn" class="btn primary small">⬇ 打包下载全部</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
